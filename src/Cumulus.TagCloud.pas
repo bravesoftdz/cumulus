@@ -61,9 +61,9 @@ Type
 
     procedure addCategories(cats : String);
     procedure Init(O: TXML);
-    procedure updateTags(Sender : TObject);
-    procedure depthSort();
-    procedure positionAll();
+    procedure UpdateTags(Sender: TObject);
+    procedure DepthSort();
+    procedure PositionAll();
     procedure MenuItemSelectHandler(Sender : TObject);
     procedure MouseExitHandler(Sender: TObject);
     procedure MouseMoveHandler(Sender: TObject; Shift: TShiftState; X, Y: Integer);
@@ -101,6 +101,9 @@ uses Variants, Utils;
 constructor TTagCloud.Create(AOwner: TComponent);
 begin
   Inherited Create(AOwner);
+
+  ParentBackground := False;
+  ParentColor := False;
 
   BevelInner := bvNone;
   BevelOuter := bvNone;
@@ -157,18 +160,18 @@ end;
 
 procedure TTagCloud.init(o: TXML);
 var
-  largest : Number;
-  smallest : Number;
-  nr : Number;
-  nr2 : Number;
-  perc : Integer;
-  mc : TTag;
-  node : IXMLNode;
-  node2 : IXMLNode;
-  i : integer;
-var
-  col : TColor;
-  hicol : TColor;
+  largest: Number;
+  smallest: Number;
+  nr: Number;
+  nr2: Number;
+  perc: Integer;
+  mc: TTag;
+  node: IXMLNode;
+  node2: IXMLNode;
+  I: integer;
+
+  col: TColor;
+  hicol: TColor;
 begin
   // Set some vars
   radius := 150;
@@ -179,10 +182,12 @@ begin
   active := False;
   lasta := 1;
   lastb := 1;
+
   // Create holder mc, center it
   holder := TMovieClip.Create(Self);
   holder.Parent := Self;
   ResizeHolder();
+
   // Loop through them to find the smallest and largest 'tags'
   largest := 0;
   smallest := 9999;
@@ -192,26 +197,28 @@ begin
     largest := Math.max(largest, nr);
     smallest := Math.min(smallest, nr);
   end;
+
   // Create movie clips
   for i := 0 to o.DocumentElement.ChildNodes.Count-1 do begin
     node2 := o.DocumentElement.ChildNodes.Get(i);
 
-    // figure out what color it should be
-    nr2 := getNumberFromString(node2.Attributes['style']);
-    if ( smallest = largest ) then begin
+    // Figure out what color it should be
+    nr2 := GetNumberFromString(node2.Attributes['style']);
+    if (smallest = largest) then begin
       perc := 1;
     end else begin
       perc := round((nr2-smallest) / (largest-smallest));
     end;
-    // create mc
-    if ( StringToColorEx(node2.Attributes['color']) = Null ) then begin
-      col := getColorFromGradient( perc );
+
+    // Create mc
+    if (StringToColorEx(node2.Attributes['color']) = Null) then begin
+      col := GetColorFromGradient(perc);
     end else begin
       col := StringToColorEx(node2.Attributes['color']);
     end;
-    if ( StringToColorEx(node2.Attributes['hicolor']) = Null ) then begin
-      if ( hicolor = tcolor1 ) then begin
-        hicol := getColorFromGradient( perc );
+    if (StringToColorEx(node2.Attributes['hicolor']) = Null) then begin
+      if (hicolor = tcolor1) then begin
+        hicol := getColorFromGradient(perc);
       end else begin
         hicol := hicolor;
       end;
@@ -221,11 +228,11 @@ begin
 
     mc := TTag.Create(Self, node2, col, hicol);
 
-    // store reference
+    // Store reference
     mcList.push(mc);
   end;
   // Distribute the tags on the sphere
-  positionAll();
+  PositionAll();
 
   // Add event listeners
   Self.OnMouseLeave := MouseExitHandler;
@@ -260,83 +267,86 @@ begin
   Init(O);
 end;
 
-procedure TTagCloud.updateTags(Sender : TObject);
+procedure TTagCloud.UpdateTags(Sender: TObject);
 var
-  a : Number;
-  b : Number;
-  J : Integer;
-  c : Number;
+  a: Number;
+  b: Number;
+  J: Integer;
+  c: Number;
+  m: Number;
 
-  rx1 : Number;
-  ry1 : Number;
-  rz1 : Number;
-  rx2 : Number;
-  ry2 : Number;
-  rz2 : Number;
-  rx3 : Number;
-  ry3 : Number;
-  rz3 : Number;
+  rx1: Number;
+  ry1: Number;
+  rz1: Number;
+  rx2: Number;
+  ry2: Number;
+  rz2: Number;
+  rx3: Number;
+  ry3: Number;
+  rz3: Number;
 
-  per : Number;
+  per: Number;
 begin
+  m := 7;
+
   if (active) then begin
-    a := (-Math.min( Math.max( Self.mouseY, -250 ), 250 ) / 150 ) * tspeed;
-    b := (Math.min( Math.max( Self.mouseX, -250 ), 250 ) /150 ) * tspeed;
+    a := (-Math.min( Math.max( Holder.mouseY, -250 ), 250 ) / 150 ) * tspeed;
+    b := (Math.min( Math.max( Holder.mouseX, -250 ), 250 ) /150 ) * tspeed;
   end else begin
     a := lasta * 0.98;
     b := lastb * 0.98;
   end;
   lasta := a;
   lastb := b;
-  // if a and b under threshold, skip motion calculations to free up the processor
+  // If a and b under threshold, skip motion calculations to free up the processor
   if( (abs(a) > 0.01) or (abs(b) > 0.01) ) then begin
     c := 0;
     SineCosine(a, b, c);
-    // bewegen van de punten
+    // Moving the points
     for  j := 0 to mcList.Count-1 do begin
-      // multiply positions by a x-rotation matrix
+      // Multiply positions by a x-rotation matrix
       rx1 := TTag(mcList.getObject(j)).cx;
       ry1 := TTag(mcList.getObject(j)).cy * ca + TTag(mcList.getObject(j)).cz * -sa;
       rz1 := TTag(mcList.getObject(j)).cy * sa + TTag(mcList.getObject(j)).cz * ca;
-      // multiply new positions by a y-rotation matrix
+      // Multiply new positions by a y-rotation matrix
       rx2 := rx1 * cb + rz1 * sb;
       ry2 := ry1;
       rz2 := rx1 * -sb + rz1 * cb;
-      // multiply new positions by a z-rotation matrix
+      // Multiply new positions by a z-rotation matrix
       rx3 := rx2 * cc + ry2 * -sc;
       ry3 := rx2 * sc + ry2 * cc;
       rz3 := rz2;
-      // set arrays to new positions
+      // Set arrays to new positions
       TTag(mcList.getObject(j)).cx := rx3;
       TTag(mcList.getObject(j)).cy := ry3;
       TTag(mcList.getObject(j)).cz := rz3;
-      // add perspective
+      // Add perspective
       per := d / (d+rz3);
-      // setmc position, scale, alpha
-      TTag(mcList.getObject(j)).Left := round((rx3 * per)*10);
-      TTag(mcList.getObject(j)).top := round((ry3 * per)*10);
-      TTag(mcList.getObject(j)).scaleX := round(per*10);
-      TTag(mcList.getObject(j)).scaleY := round(per*10);
-      TTag(mcList.getObject(j)).alpha := (per/2);
+      // Setmc position, scale, alpha
+      TTag(mcList.getObject(j)).X := round((rx3 * per) * m);
+      TTag(mcList.getObject(j)).Y := round((ry3 * per) * m);
+      TTag(mcList.getObject(j)).ScaleX := round(per * m);
+      TTag(mcList.getObject(j)).ScaleY := round(per * m);
+      TTag(mcList.getObject(j)).Alpha := (per/2);
     end;
-    depthSort();
+    DepthSort();
   end;
 end;
 
-procedure TTagCloud.depthSort();
+procedure TTagCloud.DepthSort();
 var
-  current : Integer;
-  i : Integer;
+  Current: Integer;
+  I: Integer;
 begin
   mcList.sortOn( 'cz'{, [DESCENDING | NUMERIC] });
-  current := 0;
-  for i:=0 to mcList.Count-1 do begin
-    Self.setChildIndex( TTag(mcList.getObject(i)), i );
-    if ( TTag(mcList.getObject(i)).active = true ) then begin
-      current := i;
+  Current := 0;
+  for I := 0 to mcList.Count-1 do begin
+    Holder.SetChildIndex(TTag(mcList.getObject(i)), I);
+    if (TTag(mcList.getObject(i)).Active = True) then begin
+      Current := I;
     end;
   end;
-  Self.setChildIndex( TTag(mcList.getObject(current)), mcList.Count-1 );
+  Holder.setChildIndex(TTag(mcList.getObject(current)), mcList.Count-1);
 end;
 
 destructor TTagCloud.Destroy;
@@ -355,32 +365,34 @@ begin
 end;
 
 (* See http://blog.massivecube.com/?p=9 *)
-procedure TTagCloud.positionAll();
+procedure TTagCloud.PositionAll();
 var
-  phi : Extended;
-  theta : Extended;
-  max : Integer;
-  i : Integer;
+  Phi: Extended;
+  Theta: Extended;
+  Max: Integer;
+  I: Integer;
 begin
-  phi := 0;
-  theta := 0;
-  max := mcList.Count;
+  Phi := 0;
+  Theta := 0;
+  Max := mcList.Count;
 
-  // mix up the list so not all a' live on the north pole
+  // Mix up the list so not all a' live on the north pole
   mcList.sort();
-  // distibute
-  for i:=1 to max+1-1 do begin //FIX:
-    if ( distr ) then begin
-      phi := Math.arccos(-1+(2*i-1)/max);
-      theta := sqrt(max*System.PI)*phi;
+
+  // Distibute
+  for I := 1 to Max do begin
+    if (distr) then begin
+      Phi := Math.ArcCos(-1 + (2 * I - 1) / Max);
+      Theta := Sqrt(Max * System.PI) * Phi;
     end else begin
-      phi := random()*(System.PI);
-      theta := random()*(2*System.PI);
+      Phi := Random() * (System.PI);
+      Theta := Random() * (2 * System.PI);
     end;
+
     // Coordinate conversion
-    TTag(mcList.getObject(i-1)).cx := radius * cos(theta)*sin(phi);
-    TTag(mcList.getObject(i-1)).cy := radius * sin(theta)*sin(phi);
-    TTag(mcList.getObject(i-1)).cz := radius * cos(phi);
+    TTag(mcList.getObject(I-1)).cx := Radius * Cos(Theta) * Sin(Phi);
+    TTag(mcList.getObject(I-1)).cy := Radius * Sin(Theta) * Sin(Phi);
+    TTag(mcList.getObject(I-1)).cz := Radius * Cos(Phi);
   end;
 end;
 

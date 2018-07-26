@@ -66,8 +66,8 @@ type
     property Cz: Number read _Cz write _SetCz;
     property Active : Boolean read _Active;
 
-    property Left : Integer write _Left;
-    property Top : Integer write _Top;
+    property X : Integer write _Left;
+    property Y : Integer write _Top;
   end;
 
 implementation
