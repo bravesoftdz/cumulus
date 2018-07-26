@@ -22,8 +22,9 @@ unit Cumulus.TagCloud;
 
 interface
 
-uses XMLDoc, ExtCtrls, SysUtils, Classes, Controls, StdCtrls, RegularExpressions,
-  Graphics, Contnrs, Menus, Math, FlashCompat, Cumulus.Tag, Xml.XMLIntf;
+uses XMLDoc, ExtCtrls, SysUtils, Classes, Controls, StdCtrls,
+  RegularExpressions, Graphics, Contnrs, Menus, Math, FlashCompat, Cumulus.Tag,
+  Xml.XMLIntf;
 
 Type
   TCloudDisplayMode = (dmTags, dmCategories, dmBoth);
@@ -263,7 +264,6 @@ begin
   Self.PopupMenu := MyContextMenu;
   Item.OnClick := MenuItemSelectHandler;
 
-
   Init(O);
 end;
 
@@ -364,6 +364,15 @@ begin
   Result := Color;
 end;
 
+function ComapreTag(Item1, Item2: Pointer): Integer;
+begin
+  if Random()<0.5 then begin
+    Result := 1;
+  end else begin
+    Result := -1;
+  end;
+end;
+
 (* See http://blog.massivecube.com/?p=9 *)
 procedure TTagCloud.PositionAll();
 var
@@ -372,12 +381,14 @@ var
   Max: Integer;
   I: Integer;
 begin
+  Randomize;
+
   Phi := 0;
   Theta := 0;
   Max := mcList.Count;
 
   // Mix up the list so not all a' live on the north pole
-  mcList.sort();
+  mcList.Sort(@ComapreTag);
 
   // Distibute
   for I := 1 to Max do begin

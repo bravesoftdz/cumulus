@@ -55,9 +55,9 @@ type
     property Count : Integer read getObjectCount;
     function GetObject(Ndx : Integer) : TObject;
     procedure SortOn(ColumnName : String);
-    procedure Sort;
-    function Pop : TObject;
-    procedure Push(AValue : TObject);
+    procedure Sort(Compare: TListSortCompare);
+    function Pop: TObject;
+    procedure Push(AValue: TObject);
   end;
 
   TSprite = class(TShape)
@@ -236,13 +236,9 @@ begin
   _ObjectList.Add(AValue);
 end;
 
-procedure TFlashArray.Sort;
+procedure TFlashArray.Sort(Compare: TListSortCompare);
 begin
-//  if Math.random()<0.5 then begin
-//    result := 1;
-//  end else begin
-//    result := -1;
-//  end;
+  _ObjectList.Sort(Compare);
 end;
 
 procedure TFlashArray.SortOn(ColumnName: String);
