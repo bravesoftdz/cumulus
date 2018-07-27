@@ -60,7 +60,7 @@ Type
 		active: Boolean;
 		myXML: TXML;
 
-    procedure addCategories(cats : String);
+    procedure AddCategories(cats: String);
     procedure Init(O: TXML);
     procedure UpdateTags(Sender: TObject);
     procedure DepthSort();
@@ -115,17 +115,18 @@ begin
   InternalTimer.Enabled := false;
 end;
 
-procedure TTagCloud.addCategories( cats:String );
+procedure TTagCloud.AddCategories(cats: String);
+// TODO: Not yet ported
 //var
-//  cArray   : FlashArray;
-//  smallest : Number;
-//  largest  : Number;
-//  pattern  : RegExp;
-//  i        : Integer;
-//  parts    : FlashArray;
-//  nr       : Number;
-//  node     : String;
-//  scalefactor : Number;
+//  cArray: TFlashArray;
+//  smallest: Number;
+//  largest: Number;
+//  pattern: RegExp;
+//  I: Integer;
+//  parts: TFlashArray;
+//  nr: Number;
+//  node: String;
+//  scalefactor: Number;
 begin
 //  // unescape leave spaces as '+', so we have to filter these out manually
 //  // URLDecode() does it much cleaner than unescape()
@@ -185,7 +186,7 @@ begin
   lastb := 1;
 
   // Create holder mc, center it
-  holder := TMovieClip.Create(Self);
+  holder := TMovieClip.CreateEx(Self, true);
   holder.Parent := Self;
   ResizeHolder();
 
@@ -338,7 +339,7 @@ var
   Current: Integer;
   I: Integer;
 begin
-  mcList.sortOn( 'cz'{, [DESCENDING | NUMERIC] });
+  mcList.SortOn('cz'{, [DESCENDING | NUMERIC] });
   Current := 0;
   for I := 0 to mcList.Count-1 do begin
     Holder.SetChildIndex(TTag(mcList.getObject(i)), I);

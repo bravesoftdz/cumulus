@@ -2,8 +2,9 @@ unit FlashCompat;
 
 interface
 
-uses Classes, SysUtils, Dialogs, Contnrs, StdCtrls, ExtCtrls, Utils, Menus,
-  XMLDoc, XMLIntf, IdHttp, Variants, Graphics, ShellAPI, Messages, Windows;
+uses Classes, Controls, SysUtils, Dialogs, Contnrs, StdCtrls, ExtCtrls, Utils,
+  Menus, XMLDoc, XMLIntf, IdHttp, Variants, Graphics, ShellAPI, Messages,
+  Windows;
 
 type
 //  String = String;
@@ -54,7 +55,7 @@ type
     destructor Destroy; override;
     property Count : Integer read getObjectCount;
     function GetObject(Ndx : Integer) : TObject;
-    procedure SortOn(ColumnName : String);
+    procedure SortOn(FieldName : String);
     procedure Sort(Compare: TListSortCompare);
     function Pop: TObject;
     procedure Push(AValue: TObject);
@@ -82,13 +83,21 @@ type
 
   TMovieClip = class(TPanel)
   private
+    _Transparent: Boolean;
     function GetMouseX: Integer;
     function GetMouseY: Integer;
+  protected
+    procedure CMHitTest(var Message: TCMHitTest); message CM_HITTEST;
+    procedure WndProc(var Message: TMessage); override;
+    procedure CreateParams(var Params: TCreateParams); override;
+    procedure Paint; override;
   public
     scaleX : Number;
     scaleY : Number;
     property mouseX : Integer read getMouseX;
     property mouseY : Integer read getMouseY;
+    constructor Create(AOwner: TComponent); override;
+    constructor CreateEx(AOwner: TComponent; Transparent: Boolean = false);
     procedure SetChildIndex(Spr : TSprite; Ndx : Integer);
   end;
 
@@ -111,8 +120,6 @@ type
   function StringToColorEx(const S: OleVariant): TColor;
 
 implementation
-
-uses Controls;
 
 procedure NavigateToURL( request : TURLRequest; target : String);
 begin
@@ -241,13 +248,38 @@ begin
   _ObjectList.Sort(Compare);
 end;
 
-procedure TFlashArray.SortOn(ColumnName: String);
+procedure TFlashArray.SortOn(FieldName: String);
 begin
-	// TODO: Does not make sense
-  _ColumnName := trim(ColumnName);
+	// TODO: Not yet implemented
 end;
 
 { TMovieClip }
+
+procedure TMovieClip.CMHitTest(var Message: TCMHitTest);
+begin
+  Message.Result := Windows.HTNOWHERE;
+end;
+
+constructor TMovieClip.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+end;
+
+constructor TMovieClip.CreateEx(AOwner: TComponent; Transparent: Boolean);
+begin
+  _Transparent := Transparent;
+  inherited Create(AOwner);
+end;
+
+procedure TMovieClip.CreateParams(var Params: TCreateParams);
+begin
+  inherited;
+
+  if _Transparent then begin
+    if not (csDesigning in ComponentState) then
+      Params.ExStyle := Params.ExStyle or WS_EX_TRANSPARENT;
+  end;
+end;
 
 function TMovieClip.GetMouseX: Integer;
 begin
@@ -259,9 +291,53 @@ begin
   result := ScreenToClient(Mouse.CursorPos).Y;
 end;
 
+procedure TMovieClip.Paint;
+begin
+  inherited;
+end;
+
 procedure TMovieClip.SetChildIndex(Spr: TSprite; Ndx: Integer);
 begin
 	// TODO: Missing implementation
+end;
+
+(* Transparent panel tip by Serge Gubenko *)
+procedure TMovieClip.WndProc(var Message: TMessage);
+var
+  XControl: TControl;
+  XPos: TPoint;
+begin
+  if _Transparent and (not (csDesigning in ComponentState)) and ((Message.Msg >= WM_MOUSEFIRST)
+    and (Message.Msg <= WM_MOUSELAST)) then begin
+    XPos := ClientToScreen(
+      POINT(TWMMouse(Message).XPos, TWMMouse(Message).YPos)
+    );
+    XControl := Parent.ControlAtPos(
+      POINT(TWMMouse(Message).XPos + Left,
+      TWMMouse(Message).YPos + Top),
+      true, true
+    );
+    if Assigned(XControl) and (XControl is TWinControl) then
+    begin
+      XPos := TWinControl(XControl).ScreenToClient(XPos);
+      TWMMouse(Message).XPos := XPos.X;
+      TWMMouse(Message).YPos := XPos.Y;
+      PostMessage(
+        TWinControl(XControl).Handle, Message.Msg,
+        Message.WParam, Message.LParam
+      );
+    end
+    else
+    begin
+      XPos := Parent.ScreenToClient(XPos);
+      TWMMouse(Message).XPos := XPos.X;
+      TWMMouse(Message).YPos := XPos.Y;
+      PostMessage(Parent.Handle, Message.Msg, Message.WParam, Message.LParam);
+    end;
+    Message.Result := 0;
+  end else begin
+    inherited WndProc(Message);
+  end;
 end;
 
 { TSprite }
