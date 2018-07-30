@@ -60,6 +60,8 @@ Type
 		active: Boolean;
 		myXML: TXML;
 
+    mode: TCloudDisplayMode;
+
     procedure AddCategories(cats: String);
     procedure Init(O: TXML);
     procedure UpdateTags(Sender: TObject);
@@ -79,12 +81,13 @@ Type
     procedure SetTransparentMode(const Value: Boolean);
     procedure SetSpeed(const Value: Integer);
   public
-    DisplayMode : TCloudDisplayMode;
     constructor Create(AOwner: TComponent); override;
     procedure Initialize(O: TXML);
     destructor Destroy; override;
+
     property OnNavigateToURL: TNavigateToURLEvent read _OnNavigateToURL write _OnNavigateToURL;
 
+    property DisplayMode : TCloudDisplayMode read mode write mode;
     property TransparentMode : Boolean read GetTransparentMode write SetTransparentMode;
     property TagsColor: TColor read tcolor1 write tcolor1 default $333333;
     property TagsColor2: TColor read tcolor2 write tcolor2 default $995500;
@@ -116,17 +119,16 @@ begin
 end;
 
 procedure TTagCloud.AddCategories(cats: String);
-// TODO: Not yet ported
-//var
-//  cArray: TFlashArray;
-//  smallest: Number;
-//  largest: Number;
-//  pattern: RegExp;
-//  I: Integer;
-//  parts: TFlashArray;
-//  nr: Number;
-//  node: String;
-//  scalefactor: Number;
+var
+  cArray: TFlashArray;
+  smallest: Number;
+  largest: Number;
+  pattern: RegExp;
+  I: Integer;
+  parts: TFlashArray;
+  nr: Number;
+  node: String;
+  scalefactor: Number;
 begin
 //  // unescape leave spaces as '+', so we have to filter these out manually
 //  // URLDecode() does it much cleaner than unescape()
@@ -465,7 +467,7 @@ end;
 
 procedure TTagCloud.SetTransparentMode(const Value: Boolean);
 begin
-  // TODO: Panel transparency mode
+  _Transparent := Value;
 end;
 
 procedure TTagCloud.SineCosine(a: Number; b: Number; c: Number);
@@ -502,7 +504,7 @@ end;
 
 function TTagCloud.GetTransparentMode: Boolean;
 begin
-  // TODO: Panel transparency mode
+  result := _Transparent;
 end;
 
 function TTagCloud.GetColorFromGradient(perc: Integer): TColor;

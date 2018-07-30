@@ -83,10 +83,10 @@ type
 
   TMovieClip = class(TPanel)
   private
-    _Transparent: Boolean;
     function GetMouseX: Integer;
     function GetMouseY: Integer;
   protected
+    _Transparent: Boolean;
     procedure CMHitTest(var Message: TCMHitTest); message CM_HITTEST;
     procedure WndProc(var Message: TMessage); override;
     procedure CreateParams(var Params: TCreateParams); override;
@@ -250,7 +250,7 @@ end;
 
 procedure TFlashArray.SortOn(FieldName: String);
 begin
-	// TODO: Not yet implemented
+	// TODO: Missing implementation
 end;
 
 { TMovieClip }
