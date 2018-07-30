@@ -50,7 +50,7 @@ begin
 //  TagCloud.Width := 550;
 //  TagCloud.Height := 375;
 
-  TagCloud.TagsColor := $ffffff;
+  TagCloud.TagColor := $ffffff;
   TagCloud.BackgroundColor := $333333;
   TagCloud.TransparentMode := False;
   TagCloud.RotationSpeed := 100;

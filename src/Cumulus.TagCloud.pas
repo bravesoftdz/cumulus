@@ -89,8 +89,8 @@ Type
 
     property DisplayMode : TCloudDisplayMode read mode write mode;
     property TransparentMode : Boolean read GetTransparentMode write SetTransparentMode;
-    property TagsColor: TColor read tcolor1 write tcolor1 default $333333;
-    property TagsColor2: TColor read tcolor2 write tcolor2 default $995500;
+    property TagColor: TColor read tcolor1 write tcolor1 default $333333;
+    property TagColor2: TColor read tcolor2 write tcolor2 default $995500;
     property HighColor: TColor read hicolor write hicolor default $000000;
     property BackgroundColor: TColor read GetBackgroundColor write SetBackgroundColor;
     property RotationSpeed: Integer write SetSpeed default 1;
